@@ -1,0 +1,15 @@
+{
+    int i; char c; bool b; float f;
+    i = 99;
+    f = 3.1416;
+    while (1) {
+        if (1 * 2 <= 4) { 
+            int i2;
+            i2 = 99 - 1;
+        }
+        else {
+            int i3;
+            i3 = 99 + 1;
+        }
+    }
+}

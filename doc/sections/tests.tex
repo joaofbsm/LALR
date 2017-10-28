@@ -1,0 +1,296 @@
+\section{Testes}
+
+Após a construção do parser com os comandos definidos na seção 2, é possível rodar testes com ele através da linha de comando:
+
+\begin{Verbatim}[frame=single]
+java -cp java-cup-11b-runtime.jar:. Parser tests/test1.txt
+\end{Verbatim}
+
+Foram desenvolvidos três arquivos de teste:  um totalmente correto, um com erros léxicos(lexemas inválidos) e um outro sem erros léxicos mas com erros sintáticos. A saída do analisador léxico, contendo os pares <tipo, valor>, só será mostrada para o primeiro teste pois ele já engloba a maioria dos tokens.
+
+\subsection{Teste 1 - Correto}
+
+\begin{Verbatim}[frame=single]
+{
+    int i; char c; bool b; float f;
+    i = 99;
+    f = 3.1416;
+    while (1) {
+        if (1 * 2 <= 4) { 
+            int i2;
+            i2 = 99 - 1;
+        }
+        else {
+            int i3;
+            i3 = 99 + 1;
+        }
+    }
+}
+\end{Verbatim}
+
+\subsubsection*{Saída Analisador Léxico}
+
+\begin{Verbatim}[frame=single]
+< separator, { >
+< type, int_type >
+< id, i >
+< separator, ; >
+< type, char_type >
+< id, c >
+< separator, ; >
+< type, bool_type >
+< id, b >
+< separator, ; >
+< type, float_type >
+< id, f >
+< separator, ; >
+< id, i >
+< attrib, = >
+< int_const, 99 >
+< separator, ; >
+< id, f >
+< attrib, = >
+< float_const,  3.1416 >
+< separator, ; >
+< keyword, while >
+< separator, ( >
+< int_const, 1 >
+< separator, ) >
+< separator, { >
+< keyword, if >
+< separator, ( >
+< int_const, 1 >
+< arith_op, * >
+< int_const, 2 >
+< comp_op, <= >
+< int_const, 4 >
+< separator, ) >
+< separator, { >
+< type, int_type >
+< id, i2 >
+< separator, ; >
+< id, i2 >
+< attrib, = >
+< int_const, 99 >
+< arith_op, - >
+< int_const, 1 >
+< separator, ; >
+< separator, } >
+< keyword, else >
+< separator, { >
+< type, int_type >
+< id, i3 >
+< separator, ; >
+< id, i3 >
+< attrib, = >
+< int_const, 99 >
+< arith_op, + >
+< int_const, 1 >
+< separator, ; >
+< separator, } >
+< separator, } >
+< separator, } >
+\end{Verbatim}
+
+\subsubsection*{Saída Analisador Sintático}
+
+\begin{Verbatim}[frame=single]
+============================
+Parsing file tests/test1.txt
+============================
+
+decls → e
+type → int
+decl → type id(i)
+decls → decls decl
+type → char
+decl → type id(c)
+decls → decls decl
+type → bool
+decl → type id(b)
+decls → decls decl
+type → float
+decl → type id(f)
+decls → decls decl
+stmts → e
+factor → num(99)
+unary → factor
+term → unary
+expr → term
+stmt → id(i) = expr
+stmts → stmts stmt
+factor → real(3.141)
+unary → factor
+term → unary
+expr → term
+stmt → id(f) = expr
+stmts → stmts stmt
+factor → num(1)
+unary → factor
+term → unary
+expr → term
+rel → expr
+decls → e
+stmts → e
+factor → num(1)
+unary → factor
+term → unary
+factor → num(2)
+unary → factor
+term → term * unary
+expr → term
+factor → num(4)
+unary → factor
+term → unary
+expr → term
+rel → expr <= expr
+decls → e
+type → int
+decl → type id(i2)
+decls → decls decl
+stmts → e
+factor → num(99)
+unary → factor
+term → unary
+expr → term
+factor → num(1)
+unary → factor
+term → unary
+expr → expr - term
+stmt → id(i2) = expr
+stmts → stmts stmt
+block → { decls stmts }
+stmt → block
+decls → e
+type → int
+decl → type id(i3)
+decls → decls decl
+stmts → e
+factor → num(99)
+unary → factor
+term → unary
+expr → term
+factor → num(1)
+unary → factor
+term → unary
+expr → expr + term
+stmt → id(i3) = expr
+stmts → stmts stmt
+block → { decls stmts }
+stmt → block
+stmt → if ( rel ) stmt else stmt
+stmts → stmts stmt
+block → { decls stmts }
+stmt → block
+stmt → while ( rel ) stmt
+stmts → stmts stmt
+block → { decls stmts }
+program → block
+\end{Verbatim}
+
+\subsection{Teste 2 - Erro léxico}
+
+\begin{Verbatim}[frame=single]
+{
+    float f; char c; bool b;
+    f = 1.5 * 8.23; 
+    $%¨&#
+}
+\end{Verbatim}
+
+O erro aqui acontece porque esses caracteres são ilegais, porém é importante notar que o erro que acontece no analisador léxico não é crítico, e portanto não é passado para frente. Os caracteres são ignorados e o programa segue seu fluxo de execução. Isso vai ser mais restrito a medida que a especificação do compilador se torne mais completa.
+
+\begin{Verbatim}[frame=single]
+============================
+Parsing file tests/test2.txt
+============================
+
+decls → e
+type → float
+decl → type id(f)
+decls → decls decl
+type → char
+decl → type id(c)
+decls → decls decl
+type → bool
+decl → type id(b)
+decls → decls decl
+stmts → e
+factor → real(1.5)
+unary → factor
+term → unary
+factor → real(8.2)
+unary → factor
+term → term * unary
+expr → term
+Error at line 4, column 5 : Illegal character <$>
+Error at line 4, column 6 : Illegal character <%>
+Error at line 4, column 7 : Illegal character <¨>
+Error at line 4, column 8 : Illegal character <&>
+Error at line 4, column 9 : Illegal character <#>
+stmt → id(f) = expr
+stmts → stmts stmt
+block → { decls stmts }
+program → block
+\end{Verbatim}
+
+\subsection{Teste 3 - Erro sintático}
+
+\begin{Verbatim}[frame=single]
+{
+    int weight; int group; int charge; int distance;
+    distance = 2300;
+    weight =  4000;
+    if (weight > 60) group = 5;
+    else group = weight + 14 / 15;
+    charge = 40 + 3 * distance / 1000;
+}
+\end{Verbatim}
+
+O erro aqui acontece pois a gramática não permite que um identificador esteja dentro da condição do \texttt{if}. Mesmo se isso fosse permitido, existem erros mais a frente onde, em atribuições, identificadores estão à direita do operador.
+
+\begin{Verbatim}[frame=single]
+============================
+Parsing file tests/test3.txt
+============================
+
+decls → e
+type → int
+decl → type id(weight)
+decls → decls decl
+type → int
+decl → type id(group)
+decls → decls decl
+type → int
+decl → type id(charge)
+decls → decls decl
+type → int
+decl → type id(distance)
+decls → decls decl
+stmts → e
+factor → num(2300)
+unary → factor
+term → unary
+expr → term
+stmt → id(distance) = expr
+stmts → stmts stmt
+factor → num(4000)
+unary → factor
+term → unary
+expr → term
+stmt → id(weight) = expr
+stmts → stmts stmt
+Syntax error for input symbol "id" spanning from unknown:5/9(0)
+to unknown:5/14(6)
+instead expected token classes are [MINUS, INTEGER, FLOAT]
+Couldn't repair and continue parse for input symbol "id" 
+spanning from unknown:5/9(0) to unknown:5/14(6)
+Exception in thread "main" java.lang.Exception: Can't recover 
+from previous error(s)
+	at java_cup.runtime.lr_parser.
+    report_fatal_error(lr_parser.java:392)
+	at java_cup.runtime.lr_parser.
+    unrecovered_syntax_error(lr_parser.java:539)
+	at java_cup.runtime.lr_parser.parse(lr_parser.java:731)
+	at Parser.main(Parser.java:194)
+\end{Verbatim}

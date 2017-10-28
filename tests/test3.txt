@@ -1,0 +1,8 @@
+{
+    int weight; int group; int charge; int distance;
+    distance = 2300;
+    weight =  4000;
+    if (weight > 60) group = 5;
+    else group = weight + 14 / 15;
+    charge = 40 + 3 * distance / 1000;
+}

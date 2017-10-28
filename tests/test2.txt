@@ -1,0 +1,5 @@
+{
+    float f; char c; bool b;
+    f = 1.5 * 8.23; 
+    $%¨&#
+}
